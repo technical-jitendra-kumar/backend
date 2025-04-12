@@ -1,36 +1,37 @@
-import path from "path";
+// index.js
 import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
-import serverless from "serverless-http";
+import connectToMongoDB from "./db/connectToMongoDB.js";
 
 import authRoutes from "./routes/auth.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 import userRoutes from "./routes/user.routes.js";
-import connectToMongoDB from "./db/connectToMongoDB.js";
 
-// Load env vars
+// Load environment variables
 dotenv.config();
 
-// Initialize app
+// Create Express app
 const app = express();
 
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
 
-// Routes
+// API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/users", userRoutes);
 
-// MongoDB connection
-connectToMongoDB().catch(err =>
-  console.error("MongoDB connection error:", err)
-);
+// Connect to MongoDB and start server
+const PORT = process.env.PORT || 5000;
 
-// Export as handler for Vercel
-export const handler = serverless(app);
-
-// For local testing (optional)
-export default app;
+connectToMongoDB()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running at http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB connection failed:", err);
+  });
